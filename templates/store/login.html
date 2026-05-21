@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Login - Urban Boutique{% endblock %}
+{% block content %}
+<div style="max-width: 420px; margin: 60px auto;">
+    <div class="glass-panel" style="padding: 40px;">
+        <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">Iniciar Sesion</h2>
+        <p style="color: var(--color-text-muted); margin-bottom: 30px;">Accede a tu cuenta de Urban Boutique</p>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted);">USUARIO</label>
+                <input type="text" name="username" required placeholder="Tu nombre de usuario"
+                    style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: white; font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 30px;">
+                <label
+                    style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted);">CONTRASENA</label>
+                <input type="password" name="password" required placeholder="Tu contrasena"
+                    style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: white; font-size: 14px;">
+            </div>
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 14px; font-size: 15px; font-weight: 700;">
+                Iniciar Sesion
+            </button>
+        </form>
+        <p style="text-align: center; margin-top: 24px; color: var(--color-text-muted); font-size: 14px;">
+            No tenes cuenta?
+            <a href="{% url 'register' %}" style="color: var(--color-primary); font-weight: 600;">Registrate</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

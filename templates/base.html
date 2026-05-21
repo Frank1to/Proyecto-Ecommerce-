@@ -1,43 +1,69 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Tienda Urbana Premium{% endblock %}</title>
-    
-    <!-- Archivo CSS Global de Altísima Calidad -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
 
-    <!-- Encabezado / Barra de Navegación Premium -->
     <header>
         <div class="container">
             <nav class="navbar">
-                <!-- Logotipo principal de la marca -->
                 <a href="{% url 'product_list' %}" class="logo">
                     ⚡ URBAN<span>BOUTIQUE</span>
                 </a>
-                
-                <!-- Enlaces de Navegación -->
+
                 <ul class="nav-links">
                     <li>
-                        <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_detail' %}active{% endif %}">
+                        <a href="{% url 'product_list' %}"
+                            class="{% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_detail' %}active{% endif %}">
                             Catálogo
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'order_history' %}" class="{% if request.resolver_match.url_name == 'order_history' %}active{% endif %}">
+                        <a href="{% url 'order_history' %}"
+                            class="{% if request.resolver_match.url_name == 'order_history' %}active{% endif %}">
                             Mis Pedidos
                         </a>
                     </li>
+
+                    {% if user.is_authenticated %}
+                    <li>
+                        <span style="color: var(--color-primary); font-weight: 600;">👤 {{ user.username }}</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'logout' %}" style="color: var(--color-text-muted); font-size: 13px;">Cerrar
+                            sesión</a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{% url 'login' %}"
+                            class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                            Iniciar sesión
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'register' %}" class="btn btn-secondary"
+                            style="padding: 8px 16px; border-radius: 20px;">
+                            Registrarse
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <li class="cart-icon-wrapper">
-                        <a href="{% url 'cart_detail' %}" class="btn btn-secondary {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                        <a href="{% url 'cart_detail' %}"
+                            class="btn btn-secondary {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %}"
+                            style="padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
                             🛒 Carrito
                         </a>
-                        <span id="cart-badge-count" class="cart-badge" style="{% if cart_length == 0 %}display: none;{% endif %}">
+                        <span id="cart-badge-count" class="cart-badge"
+                            style="{% if cart_length == 0 %}display: none;{% endif %}">
                             {{ cart_length }}
                         </span>
                     </li>
@@ -46,23 +72,44 @@
         </div>
     </header>
 
-    <!-- Contenido Principal Dinámico -->
+    <!-- Mensajes del sistema -->
+    {% if messages %}
+    <div
+        style="position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+        {% for message in messages %}
+        <div
+            style="background: {% if message.tags == 'error' %}rgba(220,38,38,0.9){% else %}rgba(16,185,129,0.9){% endif %}; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px);">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('[style*="position: fixed"]').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.5s';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 3000);
+    </script>
+    {% endif %}
+
     <main>
         <div class="container">
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    <!-- Pie de Página Premium -->
-    <footer style="background: rgba(5, 5, 10, 0.95); border-top: 1px solid var(--border-color); padding: 30px 0; text-align: center; font-size: 13px; color: var(--color-text-muted);">
+    <footer
+        style="background: rgba(5, 5, 10, 0.95); border-top: 1px solid var(--border-color); padding: 30px 0; text-align: center; font-size: 13px; color: var(--color-text-muted);">
         <div class="container">
             <p style="margin-bottom: 8px;">&copy; 2026 Urban Boutique Premium S.A. Todos los derechos reservados.</p>
             <p>Hecho con Django en Asunción, Paraguay 🇵🇾</p>
         </div>
     </footer>
 
-    <!-- Archivo JS de Utilidades Globales -->
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

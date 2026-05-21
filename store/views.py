@@ -494,3 +494,241 @@ def download_invoice(request, order_id):
     response = HttpResponse(pdf_content, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="factura_orden_{order.id}.pdf"'
     return response
+# 14. REGISTRO DE USUARIO
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib import messages
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('product_list')
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+        if not (username and email and password1 and password2):
+            messages.error(request, 'Por favor completá todos los campos.')
+        elif password1 != password2:
+            messages.error(request, 'Las contraseñas no coinciden.')
+        elif User.objects.filter(username=username).exists():
+            messages.error(request, 'Ese nombre de usuario ya está en uso.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, 'Ese email ya está registrado.')
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password1)
+            login(request, user)
+            messages.success(request, f'¡Bienvenido, {username}!')
+            return redirect('product_list')
+    return render(request, 'store/register.html')
+
+
+# 15. LOGIN DE USUARIO
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('product_list')
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, f'¡Bienvenido de vuelta, {user.username}!')
+            next_url = request.GET.get('next', 'product_list')
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos.')
+    return render(request, 'store/login.html')
+
+
+# 16. LOGOUT DE USUARIO
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Sesión cerrada correctamente.')
+    return redirect('product_list')
+   
+    # ==================== PANEL DE ADMINISTRACIÓN ====================
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum, Count, Avg
+from django.db.models.functions import TruncMonth
+
+@staff_member_required(login_url='login')
+def admin_dashboard(request):
+    # Estadísticas generales
+    total_orders = Order.objects.count()
+    paid_orders = Order.objects.filter(paid=True).count()
+    pending_orders = Order.objects.filter(status='pending').count()
+    total_revenue = Order.objects.filter(paid=True).aggregate(total=Sum('total_amount'))['total'] or 0
+    total_users = User.objects.filter(is_staff=False).count()
+    total_products = Product.objects.filter(is_active=True).count()
+    low_stock_variants = ProductVariant.objects.filter(stock__lte=3, stock__gt=0).select_related('product', 'color', 'size')
+    out_of_stock = ProductVariant.objects.filter(stock=0).select_related('product', 'color', 'size').count()
+
+    # Órdenes recientes
+    recent_orders = Order.objects.all()[:8]
+
+    # Ventas por mes
+    monthly_sales = Order.objects.filter(paid=True).annotate(
+        month=TruncMonth('created_at')
+    ).values('month').annotate(
+        total=Sum('total_amount'),
+        count=Count('id')
+    ).order_by('-month')[:6]
+
+    # Productos más vendidos
+    top_products = OrderItem.objects.values(
+        'product__name'
+    ).annotate(
+        total_sold=Sum('quantity'),
+        revenue=Sum('price')
+    ).order_by('-total_sold')[:5]
+
+    context = {
+        'total_orders': total_orders,
+        'paid_orders': paid_orders,
+        'pending_orders': pending_orders,
+        'total_revenue': total_revenue,
+        'total_users': total_users,
+        'total_products': total_products,
+        'low_stock_variants': low_stock_variants,
+        'out_of_stock': out_of_stock,
+        'recent_orders': recent_orders,
+        'monthly_sales': monthly_sales,
+        'top_products': top_products,
+    }
+    return render(request, 'store/admin/dashboard.html', context)
+
+
+@staff_member_required(login_url='login')
+def admin_orders(request):
+    status_filter = request.GET.get('status', '')
+    orders = Order.objects.all().prefetch_related('items__product')
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+    for o in orders:
+        o.total_formatted = f"Gs. {o.total_amount:,.0f}"
+    context = {
+        'orders': orders,
+        'status_filter': status_filter,
+        'status_choices': Order.STATUS_CHOICES,
+    }
+    return render(request, 'store/admin/orders.html', context)
+
+
+@staff_member_required(login_url='login')
+@require_POST
+def admin_order_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    new_status = request.POST.get('status')
+    valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
+    if new_status in valid_statuses:
+        order.status = new_status
+        if new_status == 'paid':
+            order.paid = True
+        order.save()
+        return JsonResponse({'success': True, 'new_status': order.get_status_display()})
+    return JsonResponse({'success': False, 'message': 'Estado inválido.'}, status=400)
+
+
+@staff_member_required(login_url='login')
+def admin_products(request):
+    products = Product.objects.all().select_related('category').prefetch_related('variants')
+    for p in products:
+        p.total_stock = sum(v.stock for v in p.variants.all())
+        p.variant_count = p.variants.count()
+    context = {'products': products}
+    return render(request, 'store/admin/products.html', context)
+
+
+@staff_member_required(login_url='login')
+@require_POST
+def admin_product_toggle(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    product.is_active = not product.is_active
+    product.save()
+    return JsonResponse({'success': True, 'is_active': product.is_active})
+
+
+@staff_member_required(login_url='login')
+def admin_users(request):
+    users = User.objects.all().order_by('-date_joined')
+    for u in users:
+        u.order_count = Order.objects.filter(email=u.email).count()
+    context = {'users': users}
+    return render(request, 'store/admin/users.html', context)
+
+
+@staff_member_required(login_url='login')
+def admin_coupons(request):
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip().upper()
+        discount_type = request.POST.get('discount_type')
+        discount_value = request.POST.get('discount_value')
+        valid_from = request.POST.get('valid_from')
+        valid_to = request.POST.get('valid_to')
+        if code and discount_type and discount_value and valid_from and valid_to:
+            Coupon.objects.create(
+                code=code,
+                discount_type=discount_type,
+                discount_value=discount_value,
+                valid_from=valid_from,
+                valid_to=valid_to,
+                active=True
+            )
+            messages.success(request, f'Cupón {code} creado con éxito.')
+        else:
+            messages.error(request, 'Completá todos los campos.')
+        return redirect('admin_coupons')
+    coupons = Coupon.objects.all().order_by('-id')
+    context = {'coupons': coupons}
+    return render(request, 'store/admin/coupons.html', context)
+
+
+@staff_member_required(login_url='login')
+@require_POST
+def admin_coupon_toggle(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    coupon.active = not coupon.active
+    coupon.save()
+    return JsonResponse({'success': True, 'active': coupon.active})
+
+
+@staff_member_required(login_url='login')
+def admin_reports(request):
+    # Ventas por mes
+    monthly_sales = Order.objects.filter(paid=True).annotate(
+        month=TruncMonth('created_at')
+    ).values('month').annotate(
+        total=Sum('total_amount'),
+        count=Count('id')
+    ).order_by('month')
+
+    # Ventas por categoría
+    category_sales = OrderItem.objects.values(
+        'product__category__name'
+    ).annotate(
+        total_sold=Sum('quantity'),
+        revenue=Sum('price')
+    ).order_by('-revenue')
+
+    # Productos más vendidos
+    top_products = OrderItem.objects.values(
+        'product__name'
+    ).annotate(
+        total_sold=Sum('quantity'),
+        revenue=Sum('price')
+    ).order_by('-total_sold')[:10]
+
+    total_revenue = Order.objects.filter(paid=True).aggregate(total=Sum('total_amount'))['total'] or 0
+    total_orders = Order.objects.filter(paid=True).count()
+    avg_order = total_revenue / total_orders if total_orders > 0 else 0
+
+    context = {
+        'monthly_sales': monthly_sales,
+        'category_sales': category_sales,
+        'top_products': top_products,
+        'total_revenue': total_revenue,
+        'total_orders': total_orders,
+        'avg_order': avg_order,
+    }
+    return render(request, 'store/admin/reports.html', context)

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Productos - Panel Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 style="font-size: 32px; font-weight: 800;">🛍️ Gestión de Productos</h1>
+        <p style="color: var(--color-text-muted);">Activá o desactivá productos de la tienda.</p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary" style="padding: 10px 18px;">← Volver al Panel</a>
+</div>
+
+<div class="glass-panel" style="padding: 24px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+            <tr style="color: var(--color-text-muted); border-bottom: 1px solid var(--border-color);">
+                <th style="text-align: left; padding: 10px 0;">Producto</th>
+                <th style="text-align: left; padding: 10px 0;">Categoría</th>
+                <th style="text-align: left; padding: 10px 0;">Precio Base</th>
+                <th style="text-align: left; padding: 10px 0;">Variantes</th>
+                <th style="text-align: left; padding: 10px 0;">Stock Total</th>
+                <th style="text-align: left; padding: 10px 0;">Estado</th>
+                <th style="text-align: left; padding: 10px 0;">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="product-row-{{ product.id }}">
+                <td style="padding: 12px 0; font-weight: 700;">{{ product.name }}</td>
+                <td style="padding: 12px 0; color: var(--color-text-muted);">{{ product.category.name }}</td>
+                <td style="padding: 12px 0;">Gs. {{ product.price|floatformat:0 }}</td>
+                <td style="padding: 12px 0;">{{ product.variant_count }}</td>
+                <td style="padding: 12px 0;">
+                    <span
+                        style="color: {% if product.total_stock <= 5 %}#f59e0b{% else %}#10b981{% endif %}; font-weight: 700;">
+                        {{ product.total_stock }} und.
+                    </span>
+                </td>
+                <td style="padding: 12px 0;">
+                    <span id="status-badge-{{ product.id }}"
+                        style="padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+                        background: {% if product.is_active %}rgba(16,185,129,0.2); color: #10b981;{% else %}rgba(239,68,68,0.2); color: #ef4444;{% endif %}">
+                        {% if product.is_active %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                </td>
+                <td style="padding: 12px 0;">
+                    <button onclick="toggleProduct({{ product.id }})" id="btn-{{ product.id }}"
+                        class="btn {% if product.is_active %}btn-secondary{% else %}btn-primary{% endif %}"
+                        style="padding: 6px 14px; font-size: 12px;">
+                        {% if product.is_active %}Desactivar{% else %}Activar{% endif %}
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function toggleProduct(productId) {
+        fetch(`/panel/products/${productId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById(`status-badge-${productId}`);
+                    const btn = document.getElementById(`btn-${productId}`);
+                    if (data.is_active) {
+                        badge.textContent = 'Activo';
+                        badge.style.background = 'rgba(16,185,129,0.2)';
+                        badge.style.color = '#10b981';
+                        btn.textContent = 'Desactivar';
+                    } else {
+                        badge.textContent = 'Inactivo';
+                        badge.style.background = 'rgba(239,68,68,0.2)';
+                        badge.style.color = '#ef4444';
+                        btn.textContent = 'Activar';
+                    }
+                }
+            });
+    }
+</script>
+{% endblock %}

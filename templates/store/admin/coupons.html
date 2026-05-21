@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Cupones - Panel Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 style="font-size: 32px; font-weight: 800;">🏷️ Gestión de Cupones</h1>
+        <p style="color: var(--color-text-muted);">Creá y administrá los cupones de descuento.</p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary" style="padding: 10px 18px;">← Volver al Panel</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+
+    <!-- Formulario crear cupón -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">➕ Nuevo Cupón</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px;">CÓDIGO</label>
+                <input type="text" name="code" required placeholder="Ej: VERANO20"
+                    style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px;">TIPO
+                    DE DESCUENTO</label>
+                <select name="discount_type"
+                    style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px;">
+                    <option value="percentage">Porcentaje (%)</option>
+                    <option value="fixed">Monto Fijo (Gs.)</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px;">VALOR</label>
+                <input type="number" name="discount_value" required placeholder="Ej: 10"
+                    style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px;">VÁLIDO
+                    DESDE</label>
+                <input type="datetime-local" name="valid_from" required
+                    style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px;">VÁLIDO
+                    HASTA</label>
+                <input type="datetime-local" name="valid_to" required
+                    style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 14px;">
+            </div>
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;">
+                Crear Cupón
+            </button>
+        </form>
+    </div>
+
+    <!-- Lista de cupones -->
+    <div class="glass-panel" style="padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">📋 Cupones Existentes</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="color: var(--color-text-muted); border-bottom: 1px solid var(--border-color);">
+                    <th style="text-align: left; padding: 10px 0;">Código</th>
+                    <th style="text-align: left; padding: 10px 0;">Tipo</th>
+                    <th style="text-align: left; padding: 10px 0;">Valor</th>
+                    <th style="text-align: left; padding: 10px 0;">Vence</th>
+                    <th style="text-align: left; padding: 10px 0;">Estado</th>
+                    <th style="text-align: left; padding: 10px 0;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coupon in coupons %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 12px 0; font-weight: 700; color: var(--color-primary);">{{ coupon.code }}</td>
+                    <td style="padding: 12px 0; color: var(--color-text-muted);">{{ coupon.get_discount_type_display }}
+                    </td>
+                    <td style="padding: 12px 0;">
+                        {% if coupon.discount_type == 'percentage' %}
+                        {{ coupon.discount_value|floatformat:0 }}%
+                        {% else %}
+                        Gs. {{ coupon.discount_value|floatformat:0 }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 0; font-size: 12px; color: var(--color-text-muted);">{{
+                        coupon.valid_to|date:"d/m/Y" }}</td>
+                    <td style="padding: 12px 0;">
+                        <span id="coupon-badge-{{ coupon.id }}"
+                            style="padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+                            background: {% if coupon.active %}rgba(16,185,129,0.2); color: #10b981;{% else %}rgba(239,68,68,0.2); color: #ef4444;{% endif %}">
+                            {% if coupon.active %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </td>
+                    <td style="padding: 12px 0;">
+                        <button onclick="toggleCoupon({{ coupon.id }})" id="coupon-btn-{{ coupon.id }}"
+                            class="btn {% if coupon.active %}btn-secondary{% else %}btn-primary{% endif %}"
+                            style="padding: 6px 14px; font-size: 12px;">
+                            {% if coupon.active %}Desactivar{% else %}Activar{% endif %}
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: var(--color-text-muted);">No hay
+                        cupones creados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleCoupon(couponId) {
+        fetch(`/panel/coupons/${couponId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById(`coupon-badge-${couponId}`);
+                    const btn = document.getElementById(`coupon-btn-${couponId}`);
+                    if (data.active) {
+                        badge.textContent = 'Activo';
+                        badge.style.background = 'rgba(16,185,129,0.2)';
+                        badge.style.color = '#10b981';
+                        btn.textContent = 'Desactivar';
+                    } else {
+                        badge.textContent = 'Inactivo';
+                        badge.style.background = 'rgba(239,68,68,0.2)';
+                        badge.style.color = '#ef4444';
+                        btn.textContent = 'Activar';
+                    }
+                }
+            });
+    }
+</script>
+{% endblock %}

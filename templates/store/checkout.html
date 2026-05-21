@@ -7,84 +7,78 @@
 <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 25px;">Finalizar Compra 💳</h1>
 
 <div class="checkout-layout">
-    <!-- Formulario de Facturación -->
     <div class="checkout-form-panel glass-panel">
-        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-            Datos de Facturación y Envío
+        <h3
+            style="font-size: 20px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            Datos de Facturacion y Envio
         </h3>
-        
         <form id="checkout-form">
             {% csrf_token %}
             <div class="form-row">
                 <div class="form-group">
                     <label for="first_name">Nombre:</label>
-                    <input type="text" id="first_name" name="first_name" class="form-control" placeholder="Ej. Franco" required>
+                    <input type="text" id="first_name" name="first_name" class="form-control" placeholder="Ej. Franco"
+                        required {% if user.is_authenticated %}value="{{ user.first_name }}" {% endif %}>
                 </div>
                 <div class="form-group">
                     <label for="last_name">Apellido:</label>
-                    <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Ej. Sanabria" required>
+                    <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Ej. Sanabria"
+                        required {% if user.is_authenticated %}value="{{ user.last_name }}" {% endif %}>
                 </div>
             </div>
-            
             <div class="form-group">
-                <label for="email">Correo Electrónico:</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="franco@ejemplo.com" required>
+                <label for="email">Correo Electronico:</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="franco@ejemplo.com"
+                    required {% if user.is_authenticated %}value="{{ user.email }}" {% endif %}>
             </div>
-            
             <div class="form-group">
-                <label for="address">Dirección de Envío:</label>
-                <input type="text" id="address" name="address" class="form-control" placeholder="Ej. Av. España 1500" required>
+                <label for="address">Direccion de Envio:</label>
+                <input type="text" id="address" name="address" class="form-control" placeholder="Ej. Av. Espana 1500"
+                    required>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label for="city">Ciudad:</label>
-                    <input type="text" id="city" name="city" class="form-control" placeholder="Asunción" required>
+                    <input type="text" id="city" name="city" class="form-control" placeholder="Asuncion" required>
                 </div>
                 <div class="form-group">
-                    <label for="country">País:</label>
+                    <label for="country">Pais:</label>
                     <input type="text" id="country" name="country" class="form-control" value="Paraguay" required>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px; margin-top: 15px;">
-                Continuar al Pago Simulado 🔒
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; height: 50px; font-size: 16px; margin-top: 15px;">
+                Continuar al Pago 🔒
             </button>
         </form>
     </div>
 
-    <!-- Resumen de Compra -->
     <div class="cart-summary-panel glass-panel">
         <h3 class="summary-title" style="font-size: 18px;">Resumen del Pedido</h3>
-        
         <div style="max-height: 240px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
             {% for item in cart %}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px;">
-                    <div>
-                        <span style="font-weight: 600;">{{ item.product.name }}</span>
-                        <div style="font-size: 11px; color: var(--color-text-muted);">
-                            Cant: {{ item.quantity }} | {{ item.variant.color.name }} - {{ item.variant.size.name }}
-                        </div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px;">
+                <div>
+                    <span style="font-weight: 600;">{{ item.product.name }}</span>
+                    <div style="font-size: 11px; color: var(--color-text-muted);">
+                        Cant: {{ item.quantity }} | {{ item.variant.color.name }} - {{ item.variant.size.name }}
                     </div>
-                    <span style="font-weight: 600;">
-                        Gs. {{ item.subtotal|floatformat:0 }}
-                    </span>
                 </div>
+                <span style="font-weight: 600;">Gs. {{ item.subtotal|floatformat:0 }}</span>
+            </div>
             {% endfor %}
         </div>
-        
         <div class="summary-row" style="border-top: 1px solid var(--border-color); padding-top: 15px;">
             <span>Subtotal:</span>
             <span>Gs. {{ cart.get_total_price|floatformat:0 }}</span>
         </div>
-        
         {% if discount > 0 %}
-            <div class="summary-row">
-                <span>Descuento (Cupón):</span>
-                <span style="color: var(--color-success);">-Gs. {{ discount|floatformat:0 }}</span>
-            </div>
+        <div class="summary-row">
+            <span>Descuento (Cupon):</span>
+            <span style="color: #10b981;">-Gs. {{ discount|floatformat:0 }}</span>
+        </div>
         {% endif %}
-        
         <div class="summary-row summary-row-total" style="font-size: 20px;">
             <span>Total:</span>
             <span style="color: var(--color-primary);">Gs. {{ final_total|floatformat:0 }}</span>
@@ -92,196 +86,230 @@
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- MODAL INTERACTIVO DE PASARELA DE PAGOS -->
-<!-- ========================================== -->
+<!-- MODAL MERCADOPAGO -->
 <div class="modal-overlay" id="payment-modal-overlay">
-    <div class="payment-modal glass-panel">
-        <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">Procesar Pago Simulado</h2>
-        <p style="color: var(--color-text-muted); font-size: 13px;">Pasarela integrada simulada para Paraguay</p>
-        
-        <!-- Logotipos de Pasarelas -->
-        <div class="payment-gateway-header">
-            <span class="gateway-badge mp">MercadoPago Py</span>
-            <span class="gateway-badge stripe">Stripe Security</span>
-        </div>
-        
-        <!-- Tarjeta de Crédito Virtual Dinámica -->
-        <div class="card-wrapper" id="virtual-credit-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="card-chip"></div>
-                <div style="font-size: 16px; font-weight: 800; font-style: italic; color: rgba(255,255,255,0.7);">VISA</div>
-            </div>
-            
-            <div class="card-number" id="card-number-display">•••• •••• •••• ••••</div>
-            
-            <div class="card-details">
+    <div class="payment-modal"
+        style="background: #fff; border-radius: 16px; padding: 0; max-width: 480px; width: 100%; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+
+        <!-- Header MercadoPago -->
+        <div
+            style="background: #009ee3; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div
+                    style="background: white; border-radius: 8px; padding: 6px 10px; font-weight: 900; color: #009ee3; font-size: 14px;">
+                    MP</div>
                 <div>
-                    <span style="font-size: 8px; display: block; color: rgba(255,255,255,0.4);">Titular</span>
-                    <span class="card-holder-name" id="card-holder-display">TITULAR DE TARJETA</span>
+                    <div style="color: white; font-weight: 700; font-size: 16px;">Mercado Pago</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 12px;">Pago seguro y protegido</div>
                 </div>
-                <div style="text-align: right;">
-                    <span style="font-size: 8px; display: block; color: rgba(255,255,255,0.4);">Vence</span>
-                    <span style="font-weight: 600; color: white;" id="card-expiry-display">MM/YY</span>
+            </div>
+            <div style="color: white; font-size: 20px; font-weight: 800;">Gs. {{ final_total|floatformat:0 }}</div>
+        </div>
+
+        <!-- Tarjeta virtual -->
+        <div style="padding: 24px 28px 0;">
+            <div id="virtual-credit-card"
+                style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 16px; padding: 20px 24px; color: white; margin-bottom: 20px; position: relative; min-height: 140px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div
+                        style="width: 36px; height: 28px; background: linear-gradient(135deg, #ffd700, #ffaa00); border-radius: 4px;">
+                    </div>
+                    <div style="font-size: 18px; font-weight: 900; font-style: italic; color: rgba(255,255,255,0.9);"
+                        id="card-brand-display">VISA</div>
+                </div>
+                <div id="card-number-display"
+                    style="font-size: 18px; letter-spacing: 3px; font-weight: 600; margin-bottom: 16px;">•••• •••• ••••
+                    ••••</div>
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-bottom: 2px;">TITULAR</div>
+                        <div id="card-holder-display"
+                            style="font-size: 13px; font-weight: 600; text-transform: uppercase;">TITULAR DE TARJETA
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-bottom: 2px;">VENCE</div>
+                        <div id="card-expiry-display" style="font-size: 13px; font-weight: 600;">MM/AA</div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Pantalla de Carga y Espera -->
-        <div id="payment-loading-screen" style="display: none; padding: 20px 0;">
-            <div class="spinner"></div>
-            <h3 style="font-size: 16px; font-weight: 600;">Comunicándose con la pasarela bancaria...</h3>
-            <p style="color: var(--color-text-muted); font-size: 12px; margin-top: 5px;">No cierres esta ventana ni refresques el navegador.</p>
+
+        <!-- Loading -->
+        <div id="payment-loading-screen" style="display: none; padding: 40px 28px; text-align: center;">
+            <div
+                style="width: 50px; height: 50px; border: 4px solid #e0e0e0; border-top: 4px solid #009ee3; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;">
+            </div>
+            <p style="color: #333; font-weight: 600; font-size: 15px;">Procesando tu pago...</p>
+            <p style="color: #999; font-size: 13px; margin-top: 6px;">No cierres esta ventana.</p>
         </div>
-        
-        <!-- Formulario Interno del Pago -->
-        <form id="payment-modal-form" style="display: block;">
-            <div class="form-group" style="text-align: left;">
-                <label for="card_number">Número de Tarjeta:</label>
-                <input type="text" id="card_number" class="form-control" placeholder="4557 8800 1234 5678" maxlength="19" required>
+
+        <!-- Formulario de pago -->
+        <form id="payment-modal-form" style="padding: 0 28px 24px;">
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px;">NUMERO
+                    DE TARJETA</label>
+                <input type="text" id="card_number" placeholder="4557 8800 1234 5678" maxlength="19" required
+                    style="width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; outline: none; transition: border 0.2s; box-sizing: border-box;">
             </div>
-            
-            <div class="form-group" style="text-align: left;">
-                <label for="card_holder">Nombre Impreso en la Tarjeta:</label>
-                <input type="text" id="card_holder" class="form-control" placeholder="FRANCO SANABRIA" style="text-transform: uppercase;" required>
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px;">NOMBRE
+                    EN LA TARJETA</label>
+                <input type="text" id="card_holder" placeholder="FRANCO SANABRIA"
+                    style="text-transform: uppercase; width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box;"
+                    required>
             </div>
-            
-            <div class="form-row">
-                <div class="form-group" style="text-align: left;">
-                    <label for="card_expiry">Vencimiento (MM/AA):</label>
-                    <input type="text" id="card_expiry" class="form-control" placeholder="12/29" maxlength="5" required>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <label
+                        style="display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px;">VENCIMIENTO</label>
+                    <input type="text" id="card_expiry" placeholder="12/29" maxlength="5" required
+                        style="width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box;">
                 </div>
-                <div class="form-group" style="text-align: left;">
-                    <label for="card_cvv">Código de Seguridad (CVV):</label>
-                    <input type="password" id="card_cvv" class="form-control" placeholder="123" maxlength="4" required>
+                <div>
+                    <label
+                        style="display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px;">CVV</label>
+                    <input type="password" id="card_cvv" placeholder="•••" maxlength="4" required
+                        style="width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
-            <!-- Selectores para simular éxito o fracaso del pago -->
-            <div class="form-group" style="text-align: left; margin: 15px 0;">
-                <label style="margin-bottom: 5px;">Simular respuesta de pasarela:</label>
-                <div style="display: flex; gap: 20px; font-size: 13px;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--color-success); font-weight: 600;">
-                        <input type="radio" name="payment_simulation" value="true" checked> Aprobado (Éxito)
+            <!-- Simulador -->
+            <div style="background: #f5f5f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                <p style="font-size: 11px; color: #999; margin-bottom: 8px; font-weight: 600;">SIMULAR RESPUESTA DEL
+                    BANCO</p>
+                <div style="display: flex; gap: 20px;">
+                    <label
+                        style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #00a650; font-weight: 600;">
+                        <input type="radio" name="payment_simulation" value="true" checked> Aprobado
                     </label>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--color-danger); font-weight: 600;">
-                        <input type="radio" name="payment_simulation" value="false"> Rechazado (Fallo)
+                    <label
+                        style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #f23d4f; font-weight: 600;">
+                        <input type="radio" name="payment_simulation" value="false"> Rechazado
                     </label>
                 </div>
             </div>
-            
-            <div style="display: flex; gap: 12px; margin-top: 25px;">
-                <button type="button" class="btn btn-secondary" id="payment-cancel-btn" style="flex: 1;">Cancelar</button>
-                <button type="submit" class="btn btn-success" style="flex: 1.5;">Pagar Gs. {{ final_total|floatformat:0 }}</button>
+
+            <div style="display: flex; gap: 12px;">
+                <button type="button" id="payment-cancel-btn"
+                    style="flex: 1; padding: 14px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; color: #666; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    style="flex: 2; padding: 14px; background: #009ee3; border: none; border-radius: 8px; color: white; font-size: 15px; font-weight: 700; cursor: pointer;">
+                    Pagar Gs. {{ final_total|floatformat:0 }}
+                </button>
+            </div>
+
+            <div
+                style="text-align: center; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span style="font-size: 16px;">🔒</span>
+                <span style="font-size: 11px; color: #999;">Tus datos estan protegidos con cifrado SSL de 256
+                    bits</span>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     const csrfToken = getCookie('csrftoken');
-    
     const checkoutForm = document.getElementById('checkout-form');
     const paymentOverlay = document.getElementById('payment-modal-overlay');
     const paymentCancelBtn = document.getElementById('payment-cancel-btn');
     const paymentForm = document.getElementById('payment-modal-form');
     const loadingScreen = document.getElementById('payment-loading-screen');
-    
-    // Inputs de la tarjeta virtual
     const cardNumInput = document.getElementById('card_number');
     const cardHolderInput = document.getElementById('card_holder');
     const cardExpiryInput = document.getElementById('card_expiry');
-    
-    // Displays en la tarjeta virtual
     const cardNumDisplay = document.getElementById('card-number-display');
     const cardHolderDisplay = document.getElementById('card-holder-display');
     const cardExpiryDisplay = document.getElementById('card-expiry-display');
 
-    // 1. Mostrar modal de pago al enviar datos de facturación
-    checkoutForm.addEventListener('submit', function(e) {
+    checkoutForm.addEventListener('submit', function (e) {
         e.preventDefault();
         paymentOverlay.classList.add('active');
     });
 
-    // 2. Cerrar modal de pago
-    paymentCancelBtn.addEventListener('click', function() {
+    paymentCancelBtn.addEventListener('click', function () {
         paymentOverlay.classList.remove('active');
     });
 
-    // 3. Formatear y Vincular datos de tarjeta con la tarjeta virtual en tiempo real
-    cardNumInput.addEventListener('input', function(e) {
-        // Remover todo excepto números
+    cardNumInput.addEventListener('input', function () {
         let value = this.value.replace(/\D/g, '');
-        // Agregar espacio cada 4 dígitos
-        let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
-        this.value = formattedValue;
-        
-        cardNumDisplay.innerText = formattedValue || '•••• •••• •••• ••••';
+        let formatted = value.replace(/(.{4})/g, '$1 ').trim();
+        this.value = formatted;
+        cardNumDisplay.innerText = formatted || '•••• •••• •••• ••••';
     });
 
-    cardHolderInput.addEventListener('input', function() {
-        let value = this.value.toUpperCase();
-        cardHolderDisplay.innerText = value || 'TITULAR DE TARJETA';
+    cardHolderInput.addEventListener('input', function () {
+        cardHolderDisplay.innerText = this.value.toUpperCase() || 'TITULAR DE TARJETA';
     });
 
-    cardExpiryInput.addEventListener('input', function(e) {
+    cardExpiryInput.addEventListener('input', function () {
         let value = this.value.replace(/\D/g, '');
-        if (value.length > 2) {
-            value = value.substring(0,2) + '/' + value.substring(2,4);
-        }
+        if (value.length > 2) value = value.substring(0, 2) + '/' + value.substring(2, 4);
         this.value = value;
-        cardExpiryDisplay.innerText = value || 'MM/YY';
+        cardExpiryDisplay.innerText = value || 'MM/AA';
     });
 
-    // 4. Procesar el Pago Final mediante Fetch AJAX
-    paymentForm.addEventListener('submit', async function(e) {
+    paymentForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        
-        // Mostrar animación de carga
         paymentForm.style.display = 'none';
         loadingScreen.style.display = 'block';
-        
-        // Obtener datos del cliente de facturación
         const clientFormData = new FormData(checkoutForm);
-        
-        // Obtener estado simulado (aprobado o rechazado)
         const simResult = document.querySelector('input[name="payment_simulation"]:checked').value;
         clientFormData.append('payment_success', simResult);
-        
         try {
-            // Esperar 2.5 segundos para simular el procesamiento de pasarela y que se vea el Spinner
             await new Promise(resolve => setTimeout(resolve, 2500));
-            
             const response = await fetch('/checkout/process/', {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken
-                },
+                headers: { 'X-CSRFToken': csrfToken },
                 body: clientFormData
             });
-            
             const data = await response.json();
-            
             if (data.success) {
-                // Redirigir a página de éxito
                 window.location.href = data.redirect_url;
             } else {
-                // Restaurar formulario y cerrar modal
                 paymentForm.style.display = 'block';
                 loadingScreen.style.display = 'none';
                 paymentOverlay.classList.remove('active');
-                
-                showToast(data.message || 'El pago fue rechazado por el banco.', 'error');
+                showToast(data.message || 'El pago fue rechazado.', 'error');
             }
         } catch (error) {
-            console.error('Error:', error);
             paymentForm.style.display = 'block';
             loadingScreen.style.display = 'none';
             paymentOverlay.classList.remove('active');
-            
-            showToast('Ocurrió un error inesperado al procesar la orden.', 'error');
+            showToast('Error inesperado al procesar la orden.', 'error');
         }
     });
 </script>
