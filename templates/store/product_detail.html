@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Urban Boutique{% endblock %}
+
+{% block content %}
+<div class="detail-layout">
+    <!-- Galería / Imagen del Producto -->
+    <div class="detail-gallery glass-panel">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" id="main-product-image">
+        {% else %}
+            <div style="background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary) 100%); width: 100%; height: 400px; display: flex; align-items: center; justify-content: center; font-size: 80px; border-radius: var(--radius-sm);">
+                👟
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Información de Compra y Selección -->
+    <div class="detail-info">
+        <span class="product-category" style="font-size: 14px;">{{ product.category.name }}</span>
+        <h1 style="color: var(--color-text);">{{ product.name }}</h1>
+        
+        <!-- Calificación Promedio -->
+        <div class="product-rating" style="margin-bottom: 20px;">
+            <span class="stars" style="font-size: 18px;">
+                {% if avg_stars > 0 %}
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= avg_stars %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                {% else %}
+                    ☆☆☆☆☆
+                {% endif %}
+            </span>
+            <span style="font-size: 14px; font-weight: 500;">({{ reviews.count }} valoraciones)</span>
+        </div>
+
+        <!-- Precio Dinámico -->
+        <div class="detail-price" id="dynamic-price">
+            Gs. {{ product.price|floatformat:0 }}
+        </div>
+
+        <p class="detail-description">
+            {{ product.description }}
+        </p>
+
+        <!-- SELECTOR DE VARIANTES DINETE -->
+        <div class="variant-selector-wrapper">
+            <!-- Selector de Colores -->
+            <div class="variant-title">Selecciona Color: <span id="color-name-display" style="color: var(--color-text); text-transform: none; font-weight: 600;"></span></div>
+            <div class="color-options" id="color-options-container">
+                {% for color in colors %}
+                    <div class="color-circle" 
+                         style="background-color: {{ color.hex_code }};" 
+                         data-color-id="{{ color.id }}" 
+                         data-color-name="{{ color.name }}"
+                         title="{{ color.name }}">
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Selector de Tallas -->
+            <div class="variant-title">Selecciona Talla: <span id="size-name-display" style="color: var(--color-text); text-transform: none; font-weight: 600;"></span></div>
+            <div class="size-options" id="size-options-container">
+                {% for size in sizes %}
+                    <div class="size-badge" 
+                         data-size-id="{{ size.id }}" 
+                         data-size-name="{{ size.name }}">
+                        {{ size.name }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- INDICADOR DE STOCK Y COMPRA -->
+        <div class="action-wrapper">
+            <!-- Indicador de Stock Dinámico -->
+            <div class="stock-indicator" id="dynamic-stock-indicator">
+                <span class="stock-dot"></span>
+                <span id="stock-text">Selecciona color y talla para ver disponibilidad.</span>
+            </div>
+
+            <div class="quantity-add-container">
+                <!-- Input de Cantidad -->
+                <div class="qty-input-group">
+                    <button class="qty-btn" id="qty-minus" type="button">-</button>
+                    <input type="number" class="qty-number" id="qty-input" value="1" min="1" max="10">
+                    <button class="qty-btn" id="qty-plus" type="button">+</button>
+                </div>
+
+                <!-- Botón Añadir -->
+                <input type="hidden" id="active-variant-id" value="">
+                <button class="btn btn-primary" id="add-to-cart-btn" disabled style="flex: 1; height: 46px;">
+                    🛒 Agregar al Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECCIÓN DE COMENTARIOS Y RESEÑAS -->
+<div class="reviews-section">
+    <h2 style="font-size: 24px; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        Reseñas de la Comunidad 💬
+    </h2>
+    
+    <div class="reviews-grid">
+        <!-- Formulario para agregar una reseña -->
+        <div class="reviews-form-panel glass-panel">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 15px;">Calificar este Producto</h3>
+            <form method="POST" action="{% url 'add_review' product.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Calificación:</label>
+                    <div class="star-rating-form">
+                        <input type="radio" id="star5" name="rating" value="5" checked><label for="star5" title="5 estrellas">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 estrellas">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 estrellas">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 estrellas">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 estrella">★</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="review-user-name">Tu Nombre:</label>
+                    <input type="text" id="review-user-name" name="user_name" class="form-control" placeholder="Ej. Carlos Amarilla" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="review-comment">Comentario:</label>
+                    <textarea id="review-comment" name="comment" rows="4" class="form-control" placeholder="Escribí qué te pareció el producto..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Enviar Valoración
+                </button>
+            </form>
+        </div>
+
+        <!-- Listado de valoraciones existentes -->
+        <div class="review-list glass-panel">
+            {% if reviews %}
+                {% for r in reviews %}
+                    <div class="review-card" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                        <div class="review-header">
+                            <span class="review-user">{{ r.user_name }}</span>
+                            <span class="review-date">{{ r.created_at|date:"d M Y" }}</span>
+                        </div>
+                        <div class="review-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= r.rating %}<span style="color: var(--color-warning);">★</span>{% else %}<span style="color: var(--color-text-muted);">☆</span>{% endif %}
+                            {% endfor %}
+                        </div>
+                        <p style="color: var(--color-text-muted); font-size: 14px; margin-top: 5px;">{{ r.comment }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="padding: 40px; text-align: center; color: var(--color-text-muted);">
+                    <p style="font-size: 15px;">Todavía no hay valoraciones para este producto.</p>
+                    <p style="font-size: 12px; margin-top: 5px;">¡Sé el primero en calificarlo!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Recuperar las variantes en JSON desde el contexto de Django
+    const variants = {{ variants_json|safe }};
+    
+    let selectedColorId = null;
+    let selectedSizeId = null;
+    let activeVariant = null;
+
+    const colorCircles = document.querySelectorAll('.color-circle');
+    const sizeBadges = document.querySelectorAll('.size-badge');
+    const colorDisplay = document.getElementById('color-name-display');
+    const sizeDisplay = document.getElementById('size-name-display');
+    
+    const priceDisplay = document.getElementById('dynamic-price');
+    const stockIndicator = document.getElementById('dynamic-stock-indicator');
+    const stockText = document.getElementById('stock-text');
+    const qtyInput = document.getElementById('qty-input');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const activeVariantInput = document.getElementById('active-variant-id');
+
+    // 1. Manejo de Selección de Colores
+    colorCircles.forEach(circle => {
+        circle.addEventListener('click', function() {
+            colorCircles.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            selectedColorId = parseInt(this.getAttribute('data-color-id'));
+            colorDisplay.innerText = this.getAttribute('data-color-name');
+            
+            selectedSizeId = null; // Reiniciar talla al cambiar de color
+            sizeDisplay.innerText = '';
+            sizeBadges.forEach(b => b.classList.remove('selected'));
+            
+            filterAvailableSizes();
+            updateProductStatus();
+        });
+    });
+
+    // 2. Manejo de Selección de Tallas
+    sizeBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            if (this.classList.contains('disabled')) return;
+            
+            sizeBadges.forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            selectedSizeId = parseInt(this.getAttribute('data-size-id'));
+            sizeDisplay.innerText = this.getAttribute('data-size-name');
+            
+            updateProductStatus();
+        });
+    });
+
+    // 3. Filtrar tallas que realmente tengan stock o correspondan al color seleccionado
+    function filterAvailableSizes() {
+        sizeBadges.forEach(badge => {
+            const sizeId = parseInt(badge.getAttribute('data-size-id'));
+            // Buscar si hay alguna variante de este color que tenga esa talla y tenga stock
+            const variantMatch = variants.find(v => v.color_id === selectedColorId && v.size_id === sizeId);
+            
+            if (variantMatch) {
+                badge.classList.remove('disabled');
+            } else {
+                badge.classList.add('disabled');
+            }
+        });
+    }
+
+    // 4. Actualizar precios, stock y botones al seleccionar variante completa
+    function updateProductStatus() {
+        if (selectedColorId && selectedSizeId) {
+            // Encontrar la variante correspondiente
+            activeVariant = variants.find(v => v.color_id === selectedColorId && v.size_id === selectedSizeId);
+            
+            if (activeVariant) {
+                // Poner ID activo
+                activeVariantInput.value = activeVariant.id;
+                
+                // Actualizar precio
+                priceDisplay.innerText = activeVariant.price_formatted;
+                
+                // Actualizar stock
+                qtyInput.max = activeVariant.stock;
+                if (qtyInput.value > activeVariant.stock) {
+                    qtyInput.value = Math.max(1, activeVariant.stock);
+                }
+                
+                if (activeVariant.stock > 0) {
+                    stockIndicator.className = "stock-indicator stock-in";
+                    stockText.innerHTML = `En stock (<b>${activeVariant.stock}</b> unidades disponibles)`;
+                    addToCartBtn.removeAttribute('disabled');
+                } else {
+                    stockIndicator.className = "stock-indicator stock-out";
+                    stockText.innerText = "Agotado temporalmente";
+                    addToCartBtn.setAttribute('disabled', 'true');
+                }
+            } else {
+                resetStatus();
+            }
+        } else {
+            resetStatus();
+        }
+    }
+
+    function resetStatus() {
+        activeVariantInput.value = "";
+        activeVariant = null;
+        priceDisplay.innerText = "Gs. {{ product.price|floatformat:0 }}";
+        stockIndicator.className = "stock-indicator";
+        stockText.innerText = "Selecciona color y talla para ver disponibilidad.";
+        addToCartBtn.setAttribute('disabled', 'true');
+    }
+
+    // 5. Controles de cantidad (+ / -)
+    const qtyPlus = document.getElementById('qty-plus');
+    const qtyMinus = document.getElementById('qty-minus');
+
+    qtyPlus.addEventListener('click', function() {
+        let maxVal = activeVariant ? activeVariant.stock : 10;
+        let currentVal = parseInt(qtyInput.value);
+        if (currentVal < maxVal) {
+            qtyInput.value = currentVal + 1;
+        }
+    });
+
+    qtyMinus.addEventListener('click', function() {
+        let currentVal = parseInt(qtyInput.value);
+        if (currentVal > 1) {
+            qtyInput.value = currentVal - 1;
+        }
+    });
+
+    // 6. Añadir al carrito
+    addToCartBtn.addEventListener('click', async function() {
+        const variantId = activeVariantInput.value;
+        const qty = parseInt(qtyInput.value);
+        
+        if (variantId) {
+            this.innerText = 'Agregando...';
+            this.setAttribute('disabled', 'true');
+            
+            const success = await addToCart(variantId, qty);
+            
+            this.innerText = '🛒 Agregar al Carrito';
+            if (activeVariant && activeVariant.stock > 0) {
+                this.removeAttribute('disabled');
+            }
+        }
+    });
+</script>
+{% endblock %}

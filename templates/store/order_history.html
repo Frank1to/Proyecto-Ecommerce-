@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Pedidos - Urban Boutique{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 32px; font-weight: 800; margin-bottom: 10px;">Mis Pedidos Realizados 📦</h1>
+<p style="color: var(--color-text-muted); font-size: 15px; margin-bottom: 30px;">
+    Consultá el historial de tus compras realizadas en esta sesión y descargá tus facturas.
+</p>
+
+{% if orders %}
+    <div class="order-history-list">
+        {% for order in orders %}
+            <div class="order-history-card glass-panel">
+                <div class="order-history-header">
+                    <!-- Fila Superior de Identificación -->
+                    <div>
+                        <span style="font-size: 11px; text-transform: uppercase; color: var(--color-primary); font-weight: 700;">
+                            Pedido Aprobado
+                        </span>
+                        <h3 style="font-size: 18px; font-weight: 700; margin-top: 2px;">
+                            Orden #ORD-{{ order.id|stringformat:"06d" }}
+                        </h3>
+                    </div>
+                    
+                    <!-- Botón de Descarga rápida -->
+                    <a href="{% url 'download_invoice' order.id %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        📄 Factura PDF
+                    </a>
+                </div>
+                
+                <!-- Detalles de la Orden -->
+                <div class="order-history-details">
+                    <div class="order-history-col">
+                        <span class="order-history-label">Fecha</span>
+                        <span class="order-history-val">{{ order.created_at|date:"d M Y, H:i" }}</span>
+                    </div>
+                    
+                    <div class="order-history-col">
+                        <span class="order-history-label">Total Pagado</span>
+                        <span class="order-history-val" style="color: var(--color-primary);">{{ order.total_formatted }}</span>
+                    </div>
+                    
+                    <div class="order-history-col">
+                        <span class="order-history-label">Destinatario</span>
+                        <span class="order-history-val">{{ order.first_name }} {{ order.last_name }}</span>
+                    </div>
+                    
+                    <div class="order-history-col" style="flex: 1; min-width: 200px;">
+                        <span class="order-history-label">Dirección de Envío</span>
+                        <span class="order-history-val" style="font-weight: 400; color: var(--color-text-muted);">
+                            {{ order.address }}, {{ order.city }} ({{ order.country }})
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Desglose de Ítems Comprados -->
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                    <span class="order-history-label" style="display: block; margin-bottom: 10px;">Artículos en este pedido:</span>
+                    
+                    {% for item in order.items.all %}
+                        <div class="order-item-strip">
+                            <span class="order-item-strip-bullet"></span>
+                            <span style="font-weight: 500;">{{ item.quantity }}x</span>
+                            <span>{{ item.product.name }}</span>
+                            {% if item.variant %}
+                                <span style="color: var(--color-text-muted); font-size: 12px;">
+                                    ({{ item.variant.color.name }} / Talla {{ item.variant.size.name }})
+                                </span>
+                            {% endif %}
+                            <span style="margin-left: auto; font-weight: 600; color: var(--color-text-muted);">
+                                Gs. {{ item.subtotal|floatformat:0 }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="glass-panel" style="padding: 60px; text-align: center;">
+        <span style="font-size: 56px;">📦</span>
+        <h2 style="margin-top: 20px; font-size: 22px;">No tenés pedidos registrados</h2>
+        <p style="color: var(--color-text-muted); margin-top: 6px;">
+            Todavía no realizaste ninguna compra en esta sesión. ¡Probá el checkout simular!
+        </p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="margin-top: 25px;">Ir a Ver Productos</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catálogo - Urban Boutique{% endblock %}
+
+{% block content %}
+<div class="catalog-header" style="margin-bottom: 30px;">
+    <h1 style="font-size: 36px; font-weight: 800; text-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);">
+        Descubrí Tu Estilo ⚡
+    </h1>
+    <p style="color: var(--color-text-muted); font-size: 15px;">
+        Explorá nuestra colección de calzado, prendas deportivas y accesorios premium.
+    </p>
+</div>
+
+<!-- Barra de Filtros y Buscador Premium -->
+<div class="filter-bar glass-panel">
+    <!-- Botones de Categorías -->
+    <div class="filter-categories">
+        <a href="{% url 'product_list' %}" class="filter-btn {% if not active_category %}active{% endif %}">
+            Todos los Productos
+        </a>
+        {% for cat in categories %}
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+               class="filter-btn {% if active_category.slug == cat.slug %}active{% endif %}">
+                {{ cat.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Caja de Búsqueda -->
+    <form method="GET" action="{% url 'product_list' %}" class="search-box">
+        {% if active_category %}
+            <input type="hidden" name="category" value="{{ active_category.slug }}">
+        {% endif %}
+        <input type="text" name="q" placeholder="Buscar productos..." class="form-control" value="{{ search_query|default:'' }}">
+        <button type="submit" class="btn btn-primary" style="padding: 10px 16px;">🔍</button>
+    </form>
+</div>
+
+<!-- Listado de Productos -->
+{% if products %}
+    <div class="product-grid">
+        {% for prod in products %}
+            <div class="product-card glass-panel">
+                <div class="product-image-container">
+                    {% if prod.image %}
+                        <img src="{{ prod.image.url }}" alt="{{ prod.name }}" class="product-image">
+                    {% else %}
+                        <!-- Marcador visual elegante de gradiente si no hay imagen -->
+                        <div class="product-image" style="background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary) 100%); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px;">
+                            👟
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="product-info">
+                    <span class="product-category">{{ prod.category.name }}</span>
+                    <a href="{% url 'product_detail' prod.slug %}" class="product-title">
+                        {{ prod.name }}
+                    </a>
+                    
+                    <div class="product-rating">
+                        <span class="stars">
+                            {% if prod.avg_stars > 0 %}
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= prod.avg_stars %}★{% else %}☆{% endif %}
+                                endfor %}
+                            {% else %}
+                                ☆☆☆☆☆
+                            {% endif %}
+                        </span>
+                        <span>({{ prod.review_count }})</span>
+                    </div>
+                    
+                    <div class="product-footer">
+                        <div class="product-price">
+                            Gs. {{ prod.price|floatformat:0 }}
+                        </div>
+                        <a href="{% url 'product_detail' prod.slug %}" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="glass-panel" style="padding: 60px; text-align: center; margin-top: 30px;">
+        <span style="font-size: 48px;">🔍</span>
+        <h3 style="margin-top: 15px; font-size: 20px;">No encontramos ningún producto.</h3>
+        <p style="color: var(--color-text-muted); margin-top: 5px;">Probá usando otros términos de búsqueda o filtros.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary" style="margin-top: 20px;">Restablecer Búsqueda</a>
+    </div>
+{% endif %}
+{% endblock %}

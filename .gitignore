@@ -1,0 +1,32 @@
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Django files
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media / Uploaded files by users
+media/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS Files
+.DS_Store
+Thumbs.db

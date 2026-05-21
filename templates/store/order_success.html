@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}¡Pedido Completado! - Urban Boutique{% endblock %}
+
+{% block content %}
+<div class="success-card glass-panel">
+    <!-- Icono de Éxito Animado -->
+    <div class="success-icon">✓</div>
+    
+    <h1 style="font-size: 28px; font-weight: 800; color: var(--color-success);">¡Compra Realizada con Éxito!</h1>
+    <p style="color: var(--color-text-muted); font-size: 15px; margin-top: 5px;">
+        Tu pedido ha sido procesado y el stock ha sido reservado correctamente.
+    </p>
+
+    <!-- Resumen de Factura Electrónica -->
+    <div class="success-details">
+        <div class="success-details-row">
+            <span style="color: var(--color-text-muted);">N° de Orden:</span>
+            <span style="font-weight: 700; color: var(--color-primary);">#ORD-{{ order.id|stringformat:"06d" }}</span>
+        </div>
+        <div class="success-details-row">
+            <span style="color: var(--color-text-muted);">Fecha y Hora:</span>
+            <span style="font-weight: 600;">{{ order.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="success-details-row">
+            <span style="color: var(--color-text-muted);">Cliente:</span>
+            <span style="font-weight: 600;">{{ order.first_name }} {{ order.last_name }}</span>
+        </div>
+        <div class="success-details-row">
+            <span style="color: var(--color-text-muted);">Dirección de Envío:</span>
+            <span style="font-weight: 600; text-align: right;">{{ order.address }}, {{ order.city }} ({{ order.country }})</span>
+        </div>
+        <div class="success-details-row" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 5px;">
+            <span style="color: var(--color-text-muted);">Método de Pago:</span>
+            <span style="font-weight: 600;">Tarjeta de Crédito</span>
+        </div>
+        <div class="success-details-row">
+            <span style="color: var(--color-text-muted);">ID de Transacción:</span>
+            <span style="font-family: monospace; font-size: 13px; font-weight: 600;">{{ order.payment_id }}</span>
+        </div>
+        <div class="success-details-row" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 5px; font-size: 16px; font-weight: 700;">
+            <span>Monto Pagado:</span>
+            <span style="color: var(--color-primary);">{{ total_formatted }}</span>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 30px;">
+        <a href="{% url 'download_invoice' order.id %}" class="btn btn-success" style="padding: 12px 28px;">
+            📄 Descargar Factura PDF
+        </a>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary" style="padding: 12px 28px;">
+            Volver al Catálogo
+        </a>
+    </div>
+</div>
+{% endblock %}

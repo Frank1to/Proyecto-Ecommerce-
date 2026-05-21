@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Carrito - Urban Boutique{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 32px; font-weight: 800; margin-bottom: 25px;">Tu Carrito de Compras 🛍️</h1>
+
+{% if cart %}
+    <div class="cart-layout" id="cart-container-layout">
+        <!-- Listado de ítems en el carrito -->
+        <div class="cart-table-panel glass-panel">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart %}
+                        <tr id="cart-row-{{ item.variant.id }}">
+                            <!-- Imagen y Detalles del Producto -->
+                            <td>
+                                <div class="cart-item-desc">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-img">
+                                    {% else %}
+                                        <div class="cart-item-img" style="background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-secondary) 100%); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                            👟
+                                        </div>
+                                    {% endif %}
+                                    <div class="cart-item-details">
+                                        <a href="{% url 'product_detail' item.product.slug %}">{{ item.product.name }}</a>
+                                        <div class="cart-item-meta">
+                                            Color: {{ item.variant.color.name }} | Talla: {{ item.variant.size.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Precio Unitario -->
+                            <td>
+                                <div class="cart-item-price">
+                                    Gs. {{ item.price|floatformat:0 }}
+                                </div>
+                            </td>
+                            
+                            <!-- Cantidad con Controles -->
+                            <td>
+                                <div class="qty-input-group" style="width: fit-content;">
+                                    <button class="qty-btn update-qty-btn" data-variant-id="{{ item.variant.id }}" data-change="-1">-</button>
+                                    <input type="number" 
+                                           class="qty-number cart-qty-input" 
+                                           id="qty-input-{{ item.variant.id }}" 
+                                           data-variant-id="{{ item.variant.id }}"
+                                           value="{{ item.quantity }}" 
+                                           min="1" 
+                                           max="{{ item.variant.stock }}"
+                                           readonly>
+                                    <button class="qty-btn update-qty-btn" data-variant-id="{{ item.variant.id }}" data-change="1">+</button>
+                                </div>
+                            </td>
+                            
+                            <!-- Subtotal del Ítem -->
+                            <td>
+                                <div class="cart-item-subtotal" id="subtotal-{{ item.variant.id }}">
+                                    Gs. {{ item.subtotal|floatformat:0 }}
+                                </div>
+                            </td>
+                            
+                            <!-- Botón de Eliminar -->
+                            <td style="text-align: right;">
+                                <button class="btn btn-secondary remove-item-btn" 
+                                        data-variant-id="{{ item.variant.id }}" 
+                                        style="padding: 8px 12px; border-radius: 50%; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.15);">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Resumen del Pedido -->
+        <div class="cart-summary-panel glass-panel">
+            <h3 class="summary-title">Resumen de Compra</h3>
+            
+            <div class="summary-row">
+                <span>Subtotal del pedido:</span>
+                <span id="summary-subtotal">Gs. {{ cart.get_total_price|floatformat:0 }}</span>
+            </div>
+            
+            <!-- Cupón de Descuento -->
+            <div class="summary-row" id="summary-discount-row" style="{% if discount == 0 %}display: none;{% endif %}">
+                <span>Descuento Aplicado:</span>
+                <span style="color: var(--color-success);" id="summary-discount">-Gs. {{ discount|floatformat:0 }}</span>
+            </div>
+            
+            <div class="summary-row summary-row-total">
+                <span>Total a pagar:</span>
+                <span id="summary-total">Gs. {{ final_total|floatformat:0 }}</span>
+            </div>
+            
+            <!-- SISTEMA DE CUPONES INTERACTIVO -->
+            <div class="coupon-section">
+                <span style="font-size: 13px; font-weight: 600; color: var(--color-text-muted);">¿Tenés un cupón de descuento?</span>
+                
+                <div id="coupon-active-badge" style="{% if not coupon %}display: none;{% endif %}">
+                    <div class="coupon-active">
+                        <span>🏷️ Cupón Activo: <b id="active-coupon-code">{{ coupon.code }}</b></span>
+                        <span id="active-coupon-desc">({{ coupon.get_discount_type_display }}: {{ coupon.discount_value|floatformat:0 }})</span>
+                    </div>
+                </div>
+
+                <div class="coupon-form" id="coupon-input-form-container" style="{% if coupon %}display: none;{% endif %}">
+                    <input type="text" id="coupon-code-input" class="form-control" placeholder="Ej: DESCUENTO10" style="text-transform: uppercase;">
+                    <button class="btn btn-secondary" id="apply-coupon-btn" type="button" style="padding: 10px 16px;">Aplicar</button>
+                </div>
+            </div>
+            
+            <a href="{% url 'checkout' %}" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 50px;">
+                Proceder al Checkout 💳
+            </a>
+            
+            <a href="{% url 'product_list' %}" class="btn btn-secondary" style="width: 100%; margin-top: 12px;">
+                Seguir Comprando
+            </a>
+        </div>
+    </div>
+{% else %}
+    <div class="glass-panel" style="padding: 60px; text-align: center;">
+        <span style="font-size: 56px;">🛒</span>
+        <h2 style="margin-top: 20px; font-size: 22px;">Tu carrito está vacío</h2>
+        <p style="color: var(--color-text-muted); margin-top: 6px;">Parece que todavía no agregaste nada. ¡Mirá nuestro catálogo!</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="margin-top: 25px;">Ver Catálogo de Productos</a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = getCookie('csrftoken');
+
+    // 1. Manejo de Actualización de Cantidades
+    document.querySelectorAll('.update-qty-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const variantId = this.getAttribute('data-variant-id');
+            const change = parseInt(this.getAttribute('data-change'));
+            const input = document.getElementById(`qty-input-${variantId}`);
+            
+            let currentQty = parseInt(input.value);
+            let newQty = currentQty + change;
+            let maxQty = parseInt(input.max);
+            
+            if (newQty < 1) return;
+            if (newQty > maxQty) {
+                showToast(`Lo sentimos, el stock máximo disponible es de ${maxQty} unidades.`, 'warning');
+                return;
+            }
+            
+            input.value = newQty;
+            await updateCartQuantity(variantId, newQty);
+        });
+    });
+
+    async function updateCartQuantity(variantId, quantity) {
+        const formData = new FormData();
+        formData.append('variant_id', variantId);
+        formData.append('quantity', quantity);
+        
+        try {
+            const response = await fetch('/cart/update/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                // Actualizar subtotal de la fila
+                document.getElementById(`subtotal-${variantId}`).innerText = data.subtotal_formatted;
+                
+                // Actualizar totales generales
+                document.getElementById('summary-subtotal').innerText = data.cart_total_formatted;
+                document.getElementById('summary-total').innerText = data.final_total_formatted;
+                
+                // Actualizar descuento
+                const discountRow = document.getElementById('summary-discount-row');
+                const discountVal = document.getElementById('summary-discount');
+                if (data.discount_formatted && data.discount_formatted !== "Gs. 0" && data.discount_formatted !== "$0.00") {
+                    discountRow.style.display = 'flex';
+                    discountVal.innerText = `-${data.discount_formatted}`;
+                } else {
+                    discountRow.style.display = 'none';
+                }
+                
+                // Actualizar badge del navbar
+                const badge = document.getElementById('cart-badge-count');
+                if (badge) {
+                    badge.innerText = data.cart_length;
+                }
+                
+                if (data.limited) {
+                    showToast(data.message, 'warning');
+                }
+            } else {
+                showToast(data.message || 'Error al actualizar.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error de red al actualizar cantidades.', 'error');
+        }
+    }
+
+    // 2. Eliminar ítem del carrito
+    document.querySelectorAll('.remove-item-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const variantId = this.getAttribute('data-variant-id');
+            const row = document.getElementById(`cart-row-${variantId}`);
+            
+            // Animación suave de desvanecimiento en el cliente
+            row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            
+            const formData = new FormData();
+            formData.append('variant_id', variantId);
+            
+            try {
+                const response = await fetch('/cart/remove/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    setTimeout(() => {
+                        row.remove();
+                        
+                        // Si ya no quedan filas, refrescar para mostrar pantalla vacía
+                        const rows = document.querySelectorAll('tbody tr');
+                        if (rows.length === 0) {
+                            window.location.reload();
+                        }
+                    }, 300);
+                    
+                    // Actualizar totales generales
+                    document.getElementById('summary-subtotal').innerText = data.cart_total_formatted;
+                    document.getElementById('summary-total').innerText = data.final_total_formatted;
+                    
+                    // Actualizar descuento
+                    const discountRow = document.getElementById('summary-discount-row');
+                    const discountVal = document.getElementById('summary-discount');
+                    if (data.discount_formatted && data.discount_formatted !== "Gs. 0" && data.discount_formatted !== "$0.00") {
+                        discountRow.style.display = 'flex';
+                        discountVal.innerText = `-${data.discount_formatted}`;
+                    } else {
+                        discountRow.style.display = 'none';
+                    }
+                    
+                    // Actualizar badge navbar
+                    const badge = document.getElementById('cart-badge-count');
+                    if (badge) {
+                        badge.innerText = data.cart_length;
+                        if (data.cart_length === 0) badge.style.display = 'none';
+                    }
+                    
+                    showToast(data.message, 'success');
+                } else {
+                    row.style.opacity = '1';
+                    row.style.transform = 'none';
+                    showToast(data.message || 'Error al eliminar.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                row.style.opacity = '1';
+                row.style.transform = 'none';
+                showToast('Error de red al intentar eliminar.', 'error');
+            }
+        });
+    });
+
+    // 3. Aplicar cupón de descuento
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    if (applyCouponBtn) {
+        applyCouponBtn.addEventListener('click', async function() {
+            const input = document.getElementById('coupon-code-input');
+            const code = input.value.trim();
+            
+            if (!code) {
+                showToast('Escribí un código de cupón antes de aplicar.', 'warning');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('coupon_code', code);
+            
+            try {
+                const response = await fetch('/cart/coupon/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Ocultar formulario de cupón, mostrar badge de cupón activo
+                    document.getElementById('coupon-input-form-container').style.display = 'none';
+                    
+                    const descStr = data.discount_type === 'percentage' 
+                        ? `(Porcentaje: ${data.discount_value|0}%)` 
+                        : `(Monto Fijo: Gs. ${data.discount_value|0})`;
+                        
+                    document.getElementById('active-coupon-code').innerText = data.coupon_code;
+                    document.getElementById('active-coupon-desc').innerText = descStr;
+                    document.getElementById('coupon-active-badge').style.display = 'block';
+                    
+                    // Actualizar fila de descuento
+                    const discountRow = document.getElementById('summary-discount-row');
+                    const discountVal = document.getElementById('summary-discount');
+                    discountRow.style.display = 'flex';
+                    discountVal.innerText = `-${data.discount_formatted}`;
+                    
+                    // Actualizar precio total final
+                    document.getElementById('summary-total').innerText = data.final_total_formatted;
+                    
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || 'Cupón inválido.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error de red al aplicar cupón.', 'error');
+            }
+        });
+    }
+</script>
+{% endblock %}
