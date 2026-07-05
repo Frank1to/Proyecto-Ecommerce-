@@ -16,18 +16,20 @@
                 <div class="order-history-header">
                     <!-- Fila Superior de Identificación -->
                     <div>
-                        <span style="font-size: 11px; text-transform: uppercase; color: var(--color-primary); font-weight: 700;">
-                            Pedido Aprobado
+                        <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: {% if order.status == 'paid' %}var(--color-success, #22c55e){% elif order.status == 'cancelled' %}var(--color-danger, #ef4444){% else %}var(--color-warning, #f59e0b){% endif %};">
+                            {{ order.get_status_display }}
                         </span>
                         <h3 style="font-size: 18px; font-weight: 700; margin-top: 2px;">
                             Orden #ORD-{{ order.id|stringformat:"06d" }}
                         </h3>
                     </div>
-                    
-                    <!-- Botón de Descarga rápida -->
-                    <a href="{% url 'download_invoice' order.id %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                        📄 Factura PDF
-                    </a>
+
+                    <!-- Botón de Descarga rápida (solo si el pedido ya está pagado) -->
+                    {% if order.paid or order.status == 'paid' %}
+                        <a href="{% url 'download_invoice' order.id %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                            📄 Factura PDF
+                        </a>
+                    {% endif %}
                 </div>
                 
                 <!-- Detalles de la Orden -->

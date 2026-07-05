@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -128,6 +129,7 @@ class Order(models.Model):
         ('shipped', 'Enviado'),
         ('cancelled', 'Cancelado'),
     )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders', verbose_name="Usuario Registrado")
     first_name = models.CharField(max_length=100, verbose_name="Nombre")
     last_name = models.CharField(max_length=100, verbose_name="Apellido")
     email = models.EmailField(verbose_name="Correo Electrónico")
@@ -139,6 +141,11 @@ class Order(models.Model):
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name="Monto Descontado")
     paid = models.BooleanField(default=False, verbose_name="¿Está pagado?")
     payment_id = models.CharField(max_length=150, blank=True, null=True, verbose_name="ID de Transacción")
+    PAYMENT_METHOD_CHOICES = (
+        ('stripe', 'Stripe'),
+        ('mercadopago', 'MercadoPago'),
+    )
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True, verbose_name="Método de Pago")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Estado de la Orden")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Fecha de Actualización")

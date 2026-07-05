@@ -41,6 +41,30 @@
                             {{ cart_length }}
                         </span>
                     </li>
+                    {% if request.user.is_authenticated %}
+                        <li style="font-size: 13px; color: var(--color-text-muted);">
+                            👤 {{ request.user.username }}
+                        </li>
+                        <li>
+                            <form method="POST" action="{% url 'logout' %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary" style="padding: 8px 16px; font: inherit; cursor: pointer;">
+                                    Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                                Iniciar Sesión
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'register' %}" class="btn btn-primary {% if request.resolver_match.url_name == 'register' %}active{% endif %}" style="padding: 8px 16px;">
+                                Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
@@ -49,6 +73,15 @@
     <!-- Contenido Principal Dinámico -->
     <main>
         <div class="container">
+            {% if messages %}
+                <div class="messages-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+                    {% for message in messages %}
+                        <div class="glass-panel" style="padding: 14px 20px; border-left: 4px solid {% if message.tags == 'error' %}var(--color-danger){% else %}var(--color-success){% endif %}; font-size: 14px;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
     </main>

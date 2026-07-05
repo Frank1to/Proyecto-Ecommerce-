@@ -65,7 +65,7 @@
                             {% if prod.avg_stars > 0 %}
                                 {% for i in "12345" %}
                                     {% if forloop.counter <= prod.avg_stars %}★{% else %}☆{% endif %}
-                                endfor %}
+                                {% endfor %}
                             {% else %}
                                 ☆☆☆☆☆
                             {% endif %}

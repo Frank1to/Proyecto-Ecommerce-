@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pagar con {{ gateway|title }} (Simulado) - Urban Boutique{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; padding: 20px 0;">
+    <div class="payment-modal glass-panel" style="position: static; transform: none;">
+        <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">
+            {% if gateway == 'stripe' %}Pagar con Stripe{% else %}Pagar con MercadoPago{% endif %}
+        </h2>
+        <p style="color: var(--color-text-muted); font-size: 13px;">
+            Pasarela simulada para fines de práctica/demostración — no se realiza ningún cargo real.
+        </p>
+
+        <div class="payment-gateway-header">
+            <span class="gateway-badge {% if gateway == 'stripe' %}stripe{% else %}mp{% endif %}">
+                {% if gateway == 'stripe' %}Stripe Checkout (Test){% else %}MercadoPago Checkout Pro (Test){% endif %}
+            </span>
+        </div>
+
+        <!-- Tarjeta Virtual Decorativa -->
+        <div class="card-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-chip"></div>
+                <div style="font-size: 16px; font-weight: 800; font-style: italic; color: rgba(255,255,255,0.7);">
+                    {% if gateway == 'stripe' %}VISA{% else %}MASTERCARD{% endif %}
+                </div>
+            </div>
+            <div class="card-number">4557 8800 1234 5678</div>
+            <div class="card-details">
+                <div>
+                    <span style="font-size: 8px; display: block; color: rgba(255,255,255,0.4);">Titular</span>
+                    <span class="card-holder-name">{{ order.first_name|upper }} {{ order.last_name|upper }}</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 8px; display: block; color: rgba(255,255,255,0.4);">Vence</span>
+                    <span style="font-weight: 600; color: white;">12/29</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: left; margin: 20px 0; padding: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-muted);">
+                <span>Orden #ORD-{{ order.id|stringformat:"06d" }}</span>
+                <span>{{ order.first_name }} {{ order.last_name }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-top: 8px;">
+                <span>Total a pagar:</span>
+                <span style="color: var(--color-primary);">Gs. {{ order.total_amount|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'simulated_payment_confirm' order.id gateway %}">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" name="result" value="declined" class="btn btn-secondary" style="flex: 1;">
+                    ❌ Rechazar (simular fallo)
+                </button>
+                <button type="submit" name="result" value="approved" class="btn btn-success" style="flex: 1.5;">
+                    ✅ Aprobar Pago
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

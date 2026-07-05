@@ -1,4 +1,5 @@
 from io import BytesIO
+from decimal import Decimal
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -206,7 +207,8 @@ def generate_invoice_pdf(order):
         ('LINEBELOW', (0,2), (1,2), 1.5, primary_color),
     ]))
     
-    payment_info_html = "<b>Método de Pago:</b> Tarjeta de Crédito (Procesado via MercadoPago/Stripe)<br/>"
+    payment_method_label = order.get_payment_method_display() or "Tarjeta de Crédito"
+    payment_info_html = f"<b>Método de Pago:</b> {payment_method_label}<br/>"
     if order.payment_id:
         payment_info_html += f"<b>ID Transacción:</b> {order.payment_id}<br/>"
     payment_info_html += "<br/>Este documento sirve como comprobante de pago oficial para fines comerciales."

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pago Cancelado - Urban Boutique{% endblock %}
+
+{% block content %}
+<div class="success-card glass-panel">
+    <div class="success-icon" style="background: var(--color-danger, #ef4444); color: #fff; box-shadow: none;">✕</div>
+
+    <h1 style="font-size: 28px; font-weight: 800; color: var(--color-danger, #ef4444);">Pago no completado</h1>
+    <p style="color: var(--color-text-muted); font-size: 15px; margin-top: 5px;">
+        Tu orden #ORD-{{ order.id|stringformat:"06d" }} fue cancelada y el stock reservado se liberó.
+        Podés volver a intentar la compra cuando quieras.
+    </p>
+
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 30px;">
+        <a href="{% url 'cart_detail' %}" class="btn btn-primary" style="padding: 12px 28px;">
+            Volver al Carrito
+        </a>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary" style="padding: 12px 28px;">
+            Volver al Catálogo
+        </a>
+    </div>
+</div>
+{% endblock %}

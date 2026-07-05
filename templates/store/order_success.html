@@ -33,7 +33,7 @@
         </div>
         <div class="success-details-row" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 5px;">
             <span style="color: var(--color-text-muted);">Método de Pago:</span>
-            <span style="font-weight: 600;">Tarjeta de Crédito</span>
+            <span style="font-weight: 600;">{{ order.get_payment_method_display|default:"Tarjeta de Crédito" }}</span>
         </div>
         <div class="success-details-row">
             <span style="color: var(--color-text-muted);">ID de Transacción:</span>
